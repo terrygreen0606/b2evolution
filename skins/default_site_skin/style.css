@@ -205,3 +205,7 @@ input#nav-trigger {
   color: #ccc;
   border: none;
 }
+.disp_register .widget_core_coll_title a,
+.disp_login .widget_core_coll_title a {
+  color: #F00;
+}

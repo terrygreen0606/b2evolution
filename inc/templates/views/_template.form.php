@@ -64,6 +64,17 @@ $Form->begin_form( 'fform', $fieldset_title );
 	$GroupCache = & get_GroupCache();
 	$Form->select_object( 'tpl_owner_grp_ID', $edited_Template->get( 'owner_grp_ID' ), $GroupCache, T_('Owned by') );
 
+    // Date Time:
+    $Form->begin_line( T_('Date and Time'), 'tpl_date', '', array( 'required' => true ) );
+
+        $Form->date_input( 'tpl_date', date2mysql( $edited_Template->get('start_timestamp') ), '', array( 'required' => true ) );
+
+        echo ' '.T_('at').' ';
+
+        $Form->time_input( 'tpl_time', date2mysql( $edited_Template->get('start_timestamp') ), '', array( 'required' => true ) );
+
+    $Form->end_line();
+
 	// Base template ID:
 	$base_template_options = array( NULL => '('.TB_('None').')' );
 	$SQL = new SQL('Get possible base templates');

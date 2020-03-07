@@ -31,7 +31,8 @@ class Template extends DataObject
 	var $locale;
 	var $template_code;
 	var $context;
-	var $owner_grp_ID;
+    var $owner_grp_ID;
+    var $start_datetime;
 
 	/**
 	 * @var integer Translated template count
@@ -62,7 +63,14 @@ class Template extends DataObject
 			$this->locale = $db_row->tpl_locale;
 			$this->template_code = $db_row->tpl_template_code;
 			$this->context = $db_row->tpl_context;
-			$this->owner_grp_ID = $db_row->tpl_owner_grp_ID;
+            $this->owner_grp_ID = $db_row->tpl_owner_grp_ID;
+            $this->start_datetime   = $db_row->tpl_start_datetime;
+			$this->start_timestamp  = strtotime( $db_row->tpl_start_datetime );
+        }
+        else
+		{	// New object:
+			global $localtimenow;
+			$this->start_timestamp = $localtimenow;
 		}
 	}
 
@@ -140,12 +148,17 @@ class Template extends DataObject
 		// Context:
 		param( 'tpl_context', 'string', 'custom' );
 		$this->set_from_Request( 'context' );
-
+        
 		// Owner Group:
 		param( 'tpl_owner_grp_ID', 'integer', NULL );
 		param_check_not_empty( 'tpl_owner_grp_ID', T_('Please select an owner group for the template.') );
-		$this->set_from_Request( 'owner_grp_ID' );
+        $this->set_from_Request( 'owner_grp_ID' );
 
+        // start datetime:
+		param_date( 'tpl_date', sprintf( T_('Please enter a valid date using the following format: %s'), '<code>'.locale_input_datefmt().'</code>' ), true );
+		param_time( 'tpl_time' );
+		$this->set( 'start_datetime', form_date( get_param( 'tpl_date' ), get_param( 'tpl_time' ) ) );
+        
 		return ! param_errors_detected();
 	}
 
@@ -218,9 +231,16 @@ class Template extends DataObject
 		if( $result )
 		{	// If Template has been updated successfully
 
-			// Invalidate caches where template may be used:
+			// Invalidate pre-rendered cache of Items which use [include:...:this_template_code]:
 			$template_code = isset( $this->previous_code ) ? $this->previous_code : $this->get( 'code' );
-			$this->invalidate_caches( $template_code );
+			$invalidated_items_num = $DB->query( 'DELETE T_items__prerendering
+				 FROM T_items__prerendering
+				 LEFT JOIN T_items__item ON itpr_itm_ID = post_ID
+				WHERE post_content LIKE '.$DB->quote( '%:'.$template_code.'%' ) );
+			if( $invalidated_items_num > 0 )
+			{	// Inform about invalidated cache:
+				$Messages->add_to_group( sprintf( T_('Pre-render caches have been invalidated for %d items that use this template in an %s.'), $invalidated_items_num, '<code>[include:]</code>' ), 'note', T_('Cache invalidated:' ) );
+			}
 
 			// Commit changes on successful update:
 			$DB->commit();
@@ -231,59 +251,6 @@ class Template extends DataObject
 		}
 
 		return $result;
-	}
-
-
-	/**
-	 * Delete object from DB.
-	 *
-	 * @return boolean true on success
-	 */
-	function dbdelete()
-	{
-		global $DB;
-
-		$old_template_code = $this->get( 'code' );
-
-		$result = parent::dbdelete();
-		if( $result )
-		{	// If Template has been deleted successfully
-
-			// Invalidate caches where template may be used:
-			$this->invalidate_caches( $old_template_code );
-
-			// Commit changes on successful update:
-			$DB->commit();
-		}
-		else
-		{	// Rollback changes on failed update:
-			$DB->rollback();
-		}
-	}
-
-
-	/**
-	 * Invalidate caches where template may be used
-	 *
-	 * @param string Template code
-	 */
-	function invalidate_caches( $template_code )
-	{
-		global $DB, $Messages;
-
-		// Invalidate pre-rendered cache of Items which use [include:...:this_template_code]:
-		$invalidated_items_num = $DB->query( 'DELETE T_items__prerendering
-			 FROM T_items__prerendering
-			 LEFT JOIN T_items__item ON itpr_itm_ID = post_ID
-			WHERE post_content LIKE '.$DB->quote( '%:'.$template_code.'%' ) );
-		if( $invalidated_items_num > 0 )
-		{	// Inform about invalidated cache:
-			$Messages->add_to_group( sprintf( T_('Pre-render caches have been invalidated for %d items that use this template in an %s.'), $invalidated_items_num, '<code>[include:]</code>' ), 'note', T_('Cache invalidated:' ) );
-		}
-
-		// BLOCK CACHE INVALIDATION:
-		BlockCache::invalidate_key( 'template_code', $template_code ); // Template has changed
-		BlockCache::invalidate_key( 'master_template', true ); // Any widget which may use Master Template must be invalidated
 	}
 
 
