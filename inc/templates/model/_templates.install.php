@@ -34,7 +34,7 @@ $schema_queries = array_merge( $schema_queries, array(
 			tpl_template_code MEDIUMTEXT NULL,
 			tpl_context ENUM( 'custom1', 'custom2', 'custom3', 'content_list_master', 'content_list_item', 'content_list_category', 'content_block', 'item_details', 'item_content', 'registration_master', 'registration' ) COLLATE ascii_general_ci NOT NULL DEFAULT 'custom1',
 			tpl_owner_grp_ID INT(4) NULL DEFAULT NULL,
-                  tpl_start_datetime TIMESTAMP not null DEFAULT '2000-01-01 00:00:00',
+                     tpl_start_datetime TIMESTAMP not null DEFAULT '2000-01-01 00:00:00',
 			PRIMARY KEY (tpl_ID),
 			UNIQUE tpl_code( tpl_code )
 		) ENGINE = innodb DEFAULT CHARSET = $db_storage_charset" ),
