@@ -63,14 +63,14 @@ class Template extends DataObject
 			$this->locale = $db_row->tpl_locale;
 			$this->template_code = $db_row->tpl_template_code;
 			$this->context = $db_row->tpl_context;
-                  $this->owner_grp_ID = $db_row->tpl_owner_grp_ID;
-                  $this->start_datetime = $db_row->tpl_start_datetime;
-            }
-            else
-            {	// New object:
-                  global $localtimenow;
-                  $this->start_timestamp = $localtimenow;
-            }
+                     $this->owner_grp_ID = $db_row->tpl_owner_grp_ID;
+                     $this->start_datetime = $db_row->tpl_start_datetime;
+              }
+              else
+              {	// New object:
+                     global $localtimenow;
+                     $this->start_timestamp = $localtimenow;
+              }
       }
 
 
@@ -146,15 +146,15 @@ class Template extends DataObject
 
 		// Context:
 		param( 'tpl_context', 'string', 'custom' );
-            $this->set_from_Request( 'context' );
+              $this->set_from_Request( 'context' );
 
-            // Owner Group:
+              // Owner Group:
 		param( 'tpl_owner_grp_ID', 'integer', NULL );
 		param_check_not_empty( 'tpl_owner_grp_ID', T_('Please select an owner group for the template.') );
-            $this->set_from_Request( 'owner_grp_ID' );
+              $this->set_from_Request( 'owner_grp_ID' );
       
-            // Date and Time
-            param_date( 'tpl_date', sprintf( T_('Please enter a valid date using the following format: %s'), '<code>'.locale_input_datefmt().'</code>' ), true );
+              // Date and Time
+              param_date( 'tpl_date', sprintf( T_('Please enter a valid date using the following format: %s'), '<code>'.locale_input_datefmt().'</code>' ), true );
 		param_time( 'tpl_time' );
 		$this->set( 'start_datetime', form_date( get_param( 'tpl_date' ), get_param( 'tpl_time' ) ) );
 
